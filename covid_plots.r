@@ -16,6 +16,35 @@ read_covid19_ts <- function(directory="./COVID-19/csse_covid_19_data/csse_covid_
 }
 
 
+# Main plotting function for a single time series 
+# @param data List of time series (data frames)
+# @param country String identifiing the rows by the Country.Region column (some countries are divided into multiple rows)
+# @param series String identifying the series in the data list
+plot_daily <- function(data, country="Germany", series="Deaths",...) {
+    df <- data[[series]]
+    x_labels <- names(df)[startsWith(names(df), "X")] 
+    ts <- colSums(subset(df, Country.Region==country)[x_labels])
+    x <- seq(ts)
+    #deaths <- as.numeric(data$Deaths[line,5:ncol(data$Deaths)])
+    #country <- data$Deaths$Country.Region[line]
+    # todo use variable deaths 
+
+    ts_per_day <- ts[-1]-ts[2:length(ts)-1]
+    f7 <- rep(1/7, 7)
+    sliding_avrg <- filter(ts_per_day, f7, sides="1")
+
+    plot(x[-1], ts_per_day, 
+         main=paste(series, "/Day", "(", country,")"), 
+         pch=0, xlab="t", ylab="cases/day", 
+         type="b", xaxt="n",...)
+    axis(1, at=x, labels=x_labels, col=1, las=3);
+    lines(x[-1], sliding_avrg, col="red")
+}
+
+
+#########################################################################
+## Code Storage (deprecated stuff)
+
 plot_deaths <- function(line) {
      plot(seq(data$Deaths[0,5:length(data$Deaths[0,])]), 
               c(data$Deaths[line,5:length(data$Deaths[1,])]), 
@@ -50,25 +79,3 @@ plot_daily_death <- function(country="Germany") {
     axis(1, at=x_times, labels=x_labels, col=1, las=3);
     lines(x_times[-1], sliding_deaths, col="red")
 }
-
-plot_daily <- function(data, country="Germany", series="Deaths",...) {
-    df <- data[[series]]
-    x_labels <- names(df)[startsWith(names(df), "X")] 
-    ts <- colSums(subset(df, Country.Region==country)[x_labels])
-    x <- seq(ts)
-    #deaths <- as.numeric(data$Deaths[line,5:ncol(data$Deaths)])
-    #country <- data$Deaths$Country.Region[line]
-    # todo use variable deaths 
-
-    ts_per_day <- ts[-1]-ts[2:length(ts)-1]
-    f7 <- rep(1/7, 7)
-    sliding_avrg <- filter(ts_per_day, f7, sides="1")
-
-    plot(x[-1], ts_per_day, 
-         main=paste(series, "/Day", "(", country,")"), 
-         pch=0, xlab="t", ylab="cases/day", 
-         type="b", xaxt="n",...)
-    axis(1, at=x, labels=x_labels, col=1, las=3);
-    lines(x[-1], sliding_avrg, col="red")
-}
-
